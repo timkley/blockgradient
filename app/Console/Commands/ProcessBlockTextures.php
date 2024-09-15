@@ -72,6 +72,7 @@ class ProcessBlockTextures extends Command
         $zip->extractTo($extractPath);
         $zip->close();
 
+        File::makeDirectory(public_path('images/blocks'), 0755, true);
         File::moveDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION.'/assets/minecraft/textures/block'), public_path('images/blocks'));
         File::deleteDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION));
     }
