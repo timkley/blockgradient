@@ -78,19 +78,21 @@ class Home extends Component
         return $colors;
     }
 
-    private function findClosestBlock(Collection $blocks, CIELab $color): Block
+    private function findClosestBlock(Collection $blocksToRemove, CIELab $color): Block
     {
-        $blocks = app('blocks')
-            ->reject(function ($block) use ($blocks) {
-                return $blocks->contains('id', $block->id);
-            })
-            ->map(function ($block) use ($color) {
-                $block->distance = Distance::CIEDE2000($color, CIELab::fromString($block->lab));
+        $blocks = cache()->rememberForever('1.21:closest-blocks-for-color-' . $color->toHex(), function () use ($blocksToRemove, $color) {
+            return app('blocks')
+                ->reject(function ($block) use ($blocksToRemove) {
+                    return $blocksToRemove->contains('id', $block->id);
+                })
+                ->map(function ($block) use ($color) {
+                    $block->distance = Distance::CIEDE2000($color, CIELab::fromString($block->lab));
 
-                return $block;
-            })
-            ->sortBy('distance')
-            ->take(10);
+                    return $block;
+                })
+                ->sortBy('distance')
+                ->take(10);
+        });
 
         return $blocks->first();
     }

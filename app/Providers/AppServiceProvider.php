@@ -14,7 +14,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('blocks', function () {
-            return Block::all();
+            return cache()->remember('blocks', now()->addDay(), function () {
+                return Block::all();
+            });
         });
     }
 
