@@ -15,6 +15,9 @@ class Home extends Component
     public string $search = '';
 
     #[Url]
+    public int $steps = 9;
+
+    #[Url]
     public ?int $startBlockId = null;
 
     #[Url]
@@ -29,7 +32,7 @@ class Home extends Component
             'blocks' => Block::where('name', 'like', "%{$this->search}%")->get(),
             'startBlock' => $startBlock,
             'endBlock' => $endBlock,
-            'gradient' => $this->generateGradient($startBlock, $endBlock),
+            'gradient' => $this->generateGradient($startBlock, $endBlock, $this->steps),
         ]);
     }
 
@@ -41,6 +44,11 @@ class Home extends Component
     public function setEndBlock($id): void
     {
         $this->endBlockId = $id;
+    }
+
+    public function setSteps(int $steps): void
+    {
+        $this->steps = $steps;
     }
 
     private function generateGradient(?Block $startBlock, ?Block $endBlock, int $steps = 10): Collection
@@ -86,7 +94,7 @@ class Home extends Component
                     return $blocksToRemove->contains('id', $block->id);
                 })
                 ->map(function ($block) use ($color) {
-                    $block->distance = Distance::CIEDE2000($color, CIELab::fromString($block->lab));
+                    $block->distance = Distance::CIE76($color, CIELab::fromString($block->lab));
 
                     return $block;
                 })

@@ -35,20 +35,41 @@
             class="sticky top-0 bg-stone-300 py-6"
             wire:loading.class="opacity-50"
         >
-            <h2 class="text-3xl font-medium">Your gradient</h2>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <h2 class="text-3xl font-medium">Your gradient</h2>
 
-            <div class="mt-3 grid grid-cols-5 lg:grid-cols-10">
+                <div class="flex items-center gap-x-2">
+                    @foreach ([3, 5, 7, 9] as $step)
+                        <button
+                            type="button"
+                            class="rounded text-xs px-2 py-1 {{ $steps === $step ? 'bg-stone-200' : 'bg-stone-300' }} hover:bg-stone-100"
+                            wire:click="setSteps({{ $step }})"
+                        >
+                            {{ $step }} steps
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-5 lg:grid-cols-9">
                 @foreach ($gradient as $block)
-                    <div
-                        class="aspect-square"
-                        style="background-color: {{ $block->hex }}"
-                    >
-                        <img
-                            alt="{{ $block->name }}"
-                            class="size-full [image-rendering:pixelated]"
-                            loading="lazy"
-                            src="{{ asset('images/blocks/'.$block->image) }}"
-                        />
+                    <div>
+                        <div class="aspect-square">
+                            <img
+                                alt="{{ $block->name }}"
+                                class="size-full [image-rendering:pixelated]"
+                                loading="lazy"
+                                src="{{ asset('images/blocks/'.$block->image) }}"
+                            />
+                        </div>
+                        @env('local')
+                            <div
+                                class="grid aspect-square place-content-center"
+                                style="background-color: {{ $block->hex }}"
+                            >
+                                <span class="-rotate-45 rounded bg-white/20 px-1 font-mono uppercase"> debug </span>
+                            </div>
+                        @endenv
                     </div>
                 @endforeach
             </div>
