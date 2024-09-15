@@ -31,13 +31,13 @@
     @endif
 
     @if ($gradient)
-        <div class="sticky top-0 bg-stone-300 py-6">
+        <div
+            class="sticky top-0 bg-stone-300 py-6"
+            wire:loading.class="opacity-50"
+        >
             <h2 class="text-3xl font-medium">Your gradient</h2>
 
-            <div
-                class="mt-3 grid [grid-template-columns:repeat(var(--steps),minmax(0,1fr))]"
-                style="--steps: {{ count($gradient) }}"
-            >
+            <div class="mt-3 grid grid-cols-5 lg:grid-cols-10">
                 @foreach ($gradient as $block)
                     <div
                         class="aspect-square"

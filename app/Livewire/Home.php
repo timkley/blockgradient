@@ -80,7 +80,7 @@ class Home extends Component
 
     private function findClosestBlock(Collection $blocksToRemove, CIELab $color): Block
     {
-        $blocks = cache()->rememberForever('1.21:closest-blocks-for-color-' . $color->toHex(), function () use ($blocksToRemove, $color) {
+        $blocks = cache()->rememberForever('1.21:closest-blocks-for-color-'.$color->toHex(), function () use ($blocksToRemove, $color) {
             return app('blocks')
                 ->reject(function ($block) use ($blocksToRemove) {
                     return $blocksToRemove->contains('id', $block->id);
