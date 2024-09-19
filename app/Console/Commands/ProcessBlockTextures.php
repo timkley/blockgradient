@@ -35,6 +35,7 @@ class ProcessBlockTextures extends Command
         '/brewing_stand_base/',
         '/campfire_log/',
         '/cauldron_(inner|top)/',
+        '/cobweb/',
         '/comparator/',
         '/composter_top/',
         '/crafting_table_top/',
