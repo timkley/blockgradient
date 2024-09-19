@@ -27,6 +27,41 @@ class ProcessBlockTextures extends Command
 
     private ImageManager $manager;
 
+    private array $excludedFileNameRegexes = [
+        '/anvil/',
+        '/beacon/',
+        '/bedrock/',
+        '/bottom/',
+        '/brewing_stand_base/',
+        '/campfire_log/',
+        '/cauldron_(inner|top)/',
+        '/comparator/',
+        '/composter_top/',
+        '/crafting_table_top/',
+        '/daylight_detector/',
+        '/debug/',
+        '/dirt_path_top/',
+        '/door/',
+        '/dragon_egg/',
+        '/enchanting_table/',
+        '/farmland/',
+        '/fletching_table_top/',
+        '/flowering_azalea_top/',
+        '/furnace_front_on/',
+        '/item_frame/',
+        '/hopper/',
+        '/lectern/',
+        '/lightning_rod/',
+        '/loom_top/',
+        '/piston_(inner|top)/',
+        '/particle/',
+        '/repeater/',
+        '/scaffolding_top/',
+        '/suspicious/',
+        '/spawner/',
+        '/vault/',
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -72,7 +107,7 @@ class ProcessBlockTextures extends Command
         $zip->extractTo($extractPath);
         $zip->close();
 
-        File::makeDirectory(public_path('images/blocks'), 0755, true);
+        File::makeDirectory(public_path('images/blocks'), 0755, true, true);
         File::moveDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION.'/assets/minecraft/textures/block'), public_path('images/blocks'));
         File::deleteDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION));
     }
@@ -95,11 +130,20 @@ class ProcessBlockTextures extends Command
             $image = $this->manager->read($file->getRealPath());
 
             if ($image->width() !== 16 || $image->height() !== 16) {
+                File::delete($file->getRealPath());
                 return;
             }
             if ($image->pickColor(0, 0)->isTransparent() || $image->pickColor(15, 15)->isTransparent()) {
+                File::delete($file->getRealPath());
                 return;
             }
+
+            if (collect($this->excludedFileNameRegexes)->contains(fn ($regex) => preg_match($regex, $file->getFilename()))) {
+                $this->newLine();
+                $this->line('Skipping '.$file->getFilename());
+                return;
+            }
+
 
             $palette = Palette::fromFilename($file->getRealPath(), Color::fromHexToInt('#FFFFFF'));
             $extractor = new ColorExtractor($palette);
