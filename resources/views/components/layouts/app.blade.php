@@ -8,10 +8,13 @@
     />
 
     <title>{{ config('app.name') }}</title>
-    <meta name="description" content="A gradient palette generator for Minecraft. Quickly find matching blocks between two other blocks." />
+    <meta
+        name="description"
+        content="A gradient palette generator for Minecraft. Quickly find matching blocks between two other blocks."
+    />
     @vite('resources/css/app.css')
 </head>
-<body class="m-6 bg-stone-300">
+<body class="m-6 bg-stone-300 text-stone-700 lg:m-12">
     {{ $slot }}
 </body>
 </html>

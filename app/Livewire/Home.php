@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Console\Commands\ProcessBlockTextures;
 use App\Models\Block;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
@@ -15,7 +16,7 @@ class Home extends Component
     public string $search = '';
 
     #[Url]
-    public int $steps = 9;
+    public int $steps = 7;
 
     #[Url]
     public ?int $startBlockId = null;
@@ -29,6 +30,7 @@ class Home extends Component
         $endBlock = Block::find($this->endBlockId);
 
         return view('livewire.home', [
+            'version' => ProcessBlockTextures::MINECRAFT_VERSION,
             'blocks' => Block::where('name', 'like', "%{$this->search}%")->get(),
             'startBlock' => $startBlock,
             'endBlock' => $endBlock,
@@ -53,8 +55,9 @@ class Home extends Component
 
     private function generateGradient(?Block $startBlock, ?Block $endBlock, int $steps = 10): Collection
     {
+        $gradient = collect([$startBlock, $endBlock]);
         if (! $startBlock || ! $endBlock) {
-            return collect();
+            return $gradient->filter();
         }
 
         $startColor = CIELab::fromString($startBlock->lab);
@@ -88,7 +91,7 @@ class Home extends Component
 
     private function findClosestBlock(Collection $blocksToRemove, CIELab $color): Block
     {
-        $blocks = cache()->rememberForever('1.21:closest-blocks-for-color-'.$color->toHex(), function () use ($blocksToRemove, $color) {
+        $blocks = cache()->rememberForever(ProcessBlockTextures::MINECRAFT_VERSION.':closest-blocks-for-color-'.$color->toHex(), function () use ($blocksToRemove, $color) {
             return app('blocks')
                 ->reject(function ($block) use ($blocksToRemove) {
                     return $blocksToRemove->contains('id', $block->id);

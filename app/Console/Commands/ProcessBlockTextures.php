@@ -3,23 +3,25 @@
 namespace App\Console\Commands;
 
 use App\Models\Block;
+use ColorThief\ColorThief;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
-use League\ColorExtractor\Color;
-use League\ColorExtractor\ColorExtractor;
-use League\ColorExtractor\Palette;
 use Spatie\Color\Hex;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 use ZipArchive;
+
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\progress;
+use function Laravel\Prompts\spin;
 
 class ProcessBlockTextures extends Command
 {
-    const MINECRAFT_VERSION = '1.21.1';
+    const string MINECRAFT_VERSION = '1.21.1';
 
     protected $signature = 'app:process-block-textures';
 
@@ -74,7 +76,7 @@ class ProcessBlockTextures extends Command
     {
         DB::table('blocks')->truncate();
 
-        $this->info('Processing block textures');
+        info('Processing block textures');
 
         $this->downloadJarAndExtractTextures();
         $this->createBlockModelsFromTextures();
@@ -82,35 +84,46 @@ class ProcessBlockTextures extends Command
 
     private function downloadJarAndExtractTextures(): void
     {
-        $body = cache()->remember('mcversions-download:'.self::MINECRAFT_VERSION, '10 minutes', function () {
+        $body = cache()->remember('mcversions-download:'.self::MINECRAFT_VERSION, '1 month', function () {
             return Http::get(sprintf('https://mcversions.net/download/%s', self::MINECRAFT_VERSION))->body();
         });
 
         $pattern = '/href="([^"]*client\.jar)"/';
 
         if (! preg_match($pattern, $body, $matches)) {
-            $this->fail('Could not find client.jar download link');
+            error('Could not find client.jar download link');
         }
 
         $path = storage_path(sprintf('app/client-%s.jar', self::MINECRAFT_VERSION));
 
         if (! File::exists($path)) {
-            $this->line('Downloading jar file');
-            Http::withOptions(['sink' => $path])
-                ->get($matches[1]);
+            spin(
+                message: 'Downloading jar file',
+                callback: fn () => Http::withOptions(['sink' => $path])->get($matches[1]),
+            );
         }
 
-        $this->line('Extracting textures from jar file');
+        spin(
+            message: 'Extracting textures',
+            callback: function () use ($path) {
+                $extractPath = storage_path('app/minecraft-'.self::MINECRAFT_VERSION);
+                $zip = new ZipArchive();
+                $zip->open($path);
+                $zip->extractTo($extractPath);
+                $zip->close();
+            }
+        );
+        info('Textures extracted');
 
-        $extractPath = storage_path('app/minecraft-'.self::MINECRAFT_VERSION);
-        $zip = new ZipArchive();
-        $zip->open($path);
-        $zip->extractTo($extractPath);
-        $zip->close();
-
-        File::makeDirectory(public_path('images/blocks'), 0755, true, true);
-        File::moveDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION.'/assets/minecraft/textures/block'), public_path('images/blocks'));
-        File::deleteDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION));
+        spin(
+            message: 'Moving textures',
+            callback: function () {
+                File::makeDirectory(public_path('images/blocks'), 0755, true, true);
+                File::moveDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION.'/assets/minecraft/textures/block'), public_path('images/blocks'));
+                File::deleteDirectory(storage_path('app/minecraft-'.self::MINECRAFT_VERSION));
+            }
+        );
+        info('Textures moved');
     }
 
     private function createBlockModelsFromTextures(): void
@@ -122,42 +135,41 @@ class ProcessBlockTextures extends Command
             ->in(public_path('images/blocks'))
             ->name('*.png');
 
-        $this->info(sprintf('Creating %s block items', $files->count()));
+        progress(
+            label: 'Creating block models',
+            steps: $files,
+            callback: function ($file, $progress) {
+                $image = $this->manager->read($file->getRealPath());
 
-        /**
-         * @var SplFileInfo $file
-         */
-        $this->withProgressBar($files, function ($file) {
-            $image = $this->manager->read($file->getRealPath());
+                $progress->label($file->getFilename());
 
-            if ($image->width() !== 16 || $image->height() !== 16) {
-                File::delete($file->getRealPath());
-                return;
+                if ($image->width() !== 16 || $image->height() !== 16) {
+                    File::delete($file->getRealPath());
+
+                    return;
+                }
+
+                if ($image->pickColor(0, 0)->isTransparent() || $image->pickColor(15, 15)->isTransparent()) {
+                    File::delete($file->getRealPath());
+
+                    return;
+                }
+
+                if (collect($this->excludedFileNameRegexes)->contains(fn ($regex) => preg_match($regex, $file->getFilename()))) {
+                    return;
+                }
+
+                $color = ColorThief::getColor($file->getRealPath(), outputFormat: 'hex');
+
+                $hex = Hex::fromString($color);
+                $lab = $hex->toCIELab();
+                Block::create([
+                    'name' => str($file->getBasename('.png'))->replace('_', ' ')->title(),
+                    'image' => $file->getFileName(),
+                    'hex' => $hex,
+                    'lab' => $lab,
+                ]);
             }
-            if ($image->pickColor(0, 0)->isTransparent() || $image->pickColor(15, 15)->isTransparent()) {
-                File::delete($file->getRealPath());
-                return;
-            }
-
-            if (collect($this->excludedFileNameRegexes)->contains(fn ($regex) => preg_match($regex, $file->getFilename()))) {
-                $this->newLine();
-                $this->line('Skipping '.$file->getFilename());
-                return;
-            }
-
-
-            $palette = Palette::fromFilename($file->getRealPath(), Color::fromHexToInt('#FFFFFF'));
-            $extractor = new ColorExtractor($palette);
-            $color = Color::fromIntToHex($extractor->extract()[0]);
-
-            $hex = Hex::fromString($color);
-            $lab = $hex->toCIELab();
-            Block::create([
-                'name' => str($file->getBasename('.png'))->replace('_', ' ')->title(),
-                'image' => $file->getFileName(),
-                'hex' => $hex,
-                'lab' => $lab,
-            ]);
-        });
+        );
     }
 }
