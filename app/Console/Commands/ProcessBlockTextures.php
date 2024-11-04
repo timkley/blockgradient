@@ -84,7 +84,7 @@ class ProcessBlockTextures extends Command
 
     private function downloadJarAndExtractTextures(): void
     {
-        $body = cache()->remember('mcversions-download:'.self::MINECRAFT_VERSION, '1 month', function () {
+        $body = cache()->remember('mcversions-download:'.self::MINECRAFT_VERSION, now()->addMonth(), function () {
             return Http::get(sprintf('https://mcversions.net/download/%s', self::MINECRAFT_VERSION))->body();
         });
 

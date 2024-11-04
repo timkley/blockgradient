@@ -105,6 +105,7 @@ class Home extends Component
                 ->take(10);
         });
 
+        /** @var Block $blocks */
         return $blocks->first();
     }
 }
