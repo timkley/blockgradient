@@ -8,6 +8,7 @@
         "php": "^8.3",
         "ext-zip": "*",
         "blade-ui-kit/blade-heroicons": "^2.4",
+        "bugsnag/bugsnag-laravel": "^2.0",
         "intervention/image": "^3.8",
         "ksubileau/color-thief-php": "^2.0",
         "laravel/framework": "^11.9",
