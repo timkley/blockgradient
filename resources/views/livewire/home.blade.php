@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-screen-lg">
+<div class="mx-auto max-w-(--breakpoint-lg)">
     <h1 class="text-2xl font-bold lg:text-3xl">
         Minecraft Block Gradient Generator
         <span class="rounded-lg bg-stone-400 px-1.5 py-0.5 text-sm font-normal text-stone-900">v{{ $version }}</span>
@@ -16,7 +16,7 @@
                 @foreach ([3, 5, 7, 9] as $step)
                     <button
                         type="button"
-                        class="rounded text-xs px-2 py-1 {{ $steps === $step ? 'bg-stone-200' : 'bg-stone-300' }} hover:bg-stone-100"
+                        class="rounded-sm text-xs px-2 py-1 {{ $steps === $step ? 'bg-stone-200' : 'bg-stone-300' }} hover:bg-stone-100"
                         wire:click="setSteps({{ $step }})"
                     >
                         {{ $step }} steps
@@ -27,7 +27,7 @@
 
         <div
             @class([
-                'mt-3 grid-cols-5 lg:grid-cols-[repeat(var(--steps),_minmax(0,1fr))]',
+                'mt-3 grid-cols-5 lg:grid-cols-[repeat(var(--steps),minmax(0,1fr))]',
                 'grid' => $startBlock && $endBlock,
                 'flex items-center justify-between' => ! $startBlock || ! $endBlock,
             ])
@@ -51,7 +51,7 @@
                             class="absolute bottom-0 left-0 grid aspect-square place-content-center"
                             style="background-color: {{ $block->hex }}"
                         >
-                            <span class="-rotate-45 rounded bg-white/20 px-1 font-mono uppercase"> debug </span>
+                            <span class="-rotate-45 rounded-sm bg-white/20 px-1 font-mono uppercase"> debug </span>
                         </div>
                     @endenv
                 </div>
@@ -67,7 +67,7 @@
 
     <input
         wire:model.live="search"
-        class="border-500 my-2 rounded-md px-4 py-2 shadow"
+        class="bg-white my-2 rounded-md px-4 py-2 shadow-sm"
         placeholder="Search..."
     />
 
@@ -83,14 +83,14 @@
                 <div class="flex">
                     <button
                         type="button"
-                        class="aspect-square size-full rounded border-stone-300 bg-stone-200 hover:bg-stone-100"
+                        class="aspect-square size-full rounded-sm border-stone-300 bg-stone-200 hover:bg-stone-100"
                         wire:click="setStartBlock({{ $block->id }})"
                     >
                         S
                     </button>
                     <button
                         type="button"
-                        class="aspect-square size-full rounded border-stone-300 bg-stone-200 hover:bg-stone-100"
+                        class="aspect-square size-full rounded-sm border-stone-300 bg-stone-200 hover:bg-stone-100"
                         wire:click="setEndBlock({{ $block->id }})"
                     >
                         E
