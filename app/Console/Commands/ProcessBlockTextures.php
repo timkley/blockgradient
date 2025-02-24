@@ -141,7 +141,7 @@ class ProcessBlockTextures extends Command
             callback: function ($file, $progress) {
                 $image = $this->manager->read($file->getRealPath());
 
-                $progress->label($file->getFilename());
+                $progress->hint($file->getFilename());
 
                 if ($image->width() !== 16 || $image->height() !== 16) {
                     File::delete($file->getRealPath());
