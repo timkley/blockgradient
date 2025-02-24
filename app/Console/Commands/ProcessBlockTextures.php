@@ -21,7 +21,7 @@ use function Laravel\Prompts\spin;
 
 class ProcessBlockTextures extends Command
 {
-    const string MINECRAFT_VERSION = '1.21.1';
+    const string MINECRAFT_VERSION = '1.21.4';
 
     protected $signature = 'app:process-block-textures';
 
