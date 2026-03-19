@@ -5,13 +5,13 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "ext-zip": "*",
         "blade-ui-kit/blade-heroicons": "^2.4",
         "bugsnag/bugsnag-laravel": "^2.0",
         "intervention/image": "^3.8",
         "ksubileau/color-thief-php": "^2.0",
-        "laravel/framework": "^11.9",
+        "laravel/framework": "^12.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
         "spatie/color": "*"
@@ -19,8 +19,8 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",
         "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^2.9",
-        "laravel/pint": "dev-feat/blade",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.29",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
@@ -59,7 +59,7 @@
             "./vendor/bin/phpstan --memory-limit=2G"
         ],
         "pint": [
-            "./vendor/bin/pint --blade"
+            "./vendor/bin/pint"
         ],
         "test": [
             "@php artisan test --exclude-group=network"

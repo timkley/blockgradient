@@ -92,11 +92,14 @@ class Home extends Component
     private function findClosestBlock(Collection $blocksToRemove, CIELab $color): Block
     {
         $blocks = cache()->rememberForever(ProcessBlockTextures::MINECRAFT_VERSION.':closest-blocks-for-color-'.$color->toHex(), function () use ($blocksToRemove, $color) {
-            return app('blocks')
-                ->reject(function ($block) use ($blocksToRemove) {
+            /** @var \Illuminate\Database\Eloquent\Collection<int, Block> $allBlocks */
+            $allBlocks = app('blocks');
+
+            return $allBlocks
+                ->reject(function (Block $block) use ($blocksToRemove) {
                     return $blocksToRemove->contains('id', $block->id);
                 })
-                ->map(function ($block) use ($color) {
+                ->map(function (Block $block) use ($color) {
                     $block->distance = Distance::CIE76($color, CIELab::fromString($block->lab));
 
                     return $block;

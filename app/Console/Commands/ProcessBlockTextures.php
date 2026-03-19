@@ -69,7 +69,7 @@ class ProcessBlockTextures extends Command
     {
         parent::__construct();
 
-        $this->manager = new ImageManager(new Driver());
+        $this->manager = new ImageManager(new Driver);
     }
 
     public function handle(): void
@@ -107,7 +107,7 @@ class ProcessBlockTextures extends Command
             message: 'Extracting textures',
             callback: function () use ($path) {
                 $extractPath = storage_path('app/minecraft-'.self::MINECRAFT_VERSION);
-                $zip = new ZipArchive();
+                $zip = new ZipArchive;
                 $zip->open($path);
                 $zip->extractTo($extractPath);
                 $zip->close();
@@ -128,7 +128,7 @@ class ProcessBlockTextures extends Command
 
     private function createBlockModelsFromTextures(): void
     {
-        $finder = new Finder();
+        $finder = new Finder;
         $files = $finder
             ->files()
             ->depth('== 0')
