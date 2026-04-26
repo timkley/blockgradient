@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-PHP="$(pwd)/frankenphp php-cli"
+PHP="/usr/bin/frankenphp php-cli"
 COMPOSER="$(command -v composer)"
 
 git pull origin main

@@ -6,7 +6,7 @@ After=network.target
 User=admin
 Group=admin
 WorkingDirectory=/var/www/blockgradient
-ExecStart=/var/www/blockgradient/frankenphp php-cli artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8001 --max-requests=500
+ExecStart=/usr/bin/frankenphp php-cli artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8001 --max-requests=500
 ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 RestartSec=3

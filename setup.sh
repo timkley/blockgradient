@@ -6,19 +6,8 @@ APP_NAME="blockgradient"
 DOMAIN="blockgradient.timkley.dev"
 APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
-PHP="${APP_DIR}/frankenphp php-cli"
+PHP="/usr/bin/frankenphp php-cli"
 COMPOSER="$(command -v composer)"
-
-if [ ! -x "${APP_DIR}/frankenphp" ]; then
-    case "$(uname -m)" in
-        x86_64) FRANKEN_ARCH="x86_64" ;;
-        aarch64|arm64) FRANKEN_ARCH="aarch64" ;;
-        *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
-    esac
-    curl -fsSL "https://github.com/php/frankenphp/releases/latest/download/frankenphp-linux-${FRANKEN_ARCH}" -o "${APP_DIR}/frankenphp"
-    chmod +x "${APP_DIR}/frankenphp"
-    chown admin:admin "${APP_DIR}/frankenphp"
-fi
 
 cp deployment/traefik.toml "${TRAEFIK_DYNAMIC}"
 cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
