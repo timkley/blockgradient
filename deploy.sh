@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 
 git pull origin main
 
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-zip
 
 npm ci
 npm run build

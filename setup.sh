@@ -12,7 +12,7 @@ cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
 systemctl daemon-reload
 systemctl enable "${APP_NAME}.service"
 
-runuser -u admin -- composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+runuser -u admin -- composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-zip
 runuser -u admin -- npm ci
 runuser -u admin -- npm run build
 
