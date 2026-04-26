@@ -2,15 +2,18 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+PHP="$(pwd)/frankenphp php-cli"
+COMPOSER="$(command -v composer)"
+
 git pull origin main
 
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-zip
+${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 npm ci
 npm run build
 
-php artisan migrate --force
-php artisan optimize
-php artisan octane:reload
+${PHP} artisan migrate --force
+${PHP} artisan optimize
+${PHP} artisan octane:reload
 
 echo "Deployed successfully."

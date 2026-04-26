@@ -6,20 +6,22 @@ APP_NAME="blockgradient"
 DOMAIN="blockgradient.timkley.dev"
 APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
+PHP="${APP_DIR}/frankenphp php-cli"
+COMPOSER="$(command -v composer)"
 
 cp deployment/traefik.toml "${TRAEFIK_DYNAMIC}"
 cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
 systemctl daemon-reload
 systemctl enable "${APP_NAME}.service"
 
-runuser -u admin -- composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-zip
+runuser -u admin -- ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 runuser -u admin -- npm ci
 runuser -u admin -- npm run build
 
 if [ ! -f .env ]; then
     cp .env.example .env
     chown admin:admin .env
-    runuser -u admin -- php artisan key:generate
+    runuser -u admin -- ${PHP} artisan key:generate
 
     set_env() {
         local key="$1"
@@ -50,7 +52,7 @@ if [ ! -f .env ]; then
     echo "Initial setup complete."
     echo "Set DB_PASSWORD and any app-specific secrets in ${APP_DIR}/.env, then run migrations and start the service."
 else
-    runuser -u admin -- php artisan migrate --force
-    runuser -u admin -- php artisan optimize
+    runuser -u admin -- ${PHP} artisan migrate --force
+    runuser -u admin -- ${PHP} artisan optimize
     systemctl restart "${APP_NAME}.service"
 fi
