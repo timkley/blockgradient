@@ -10,8 +10,8 @@ git pull origin main
 ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 ${PHP} artisan package:discover --ansi
 
-npm ci
-npm run build
+bun install
+bun run build
 
 ${PHP} artisan migrate --force
 ${PHP} artisan optimize
