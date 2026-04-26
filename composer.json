@@ -12,6 +12,7 @@
         "intervention/image": "^3.8",
         "ksubileau/color-thief-php": "^2.0",
         "laravel/framework": "^12.0",
+        "laravel/octane": "^2.17",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
         "spatie/color": "*"
