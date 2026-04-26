@@ -7,7 +7,8 @@ COMPOSER="$(command -v composer)"
 
 git pull origin main
 
-${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+${PHP} artisan package:discover --ansi
 
 npm ci
 npm run build

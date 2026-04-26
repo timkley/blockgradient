@@ -14,7 +14,8 @@ cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
 systemctl daemon-reload
 systemctl enable "${APP_NAME}.service"
 
-runuser -u admin -- ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+runuser -u admin -- ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+runuser -u admin -- ${PHP} artisan package:discover --ansi
 runuser -u admin -- npm ci
 runuser -u admin -- npm run build
 
