@@ -4,6 +4,7 @@ cd "$(dirname "$0")"
 
 APP_NAME="blockgradient"
 DOMAIN="blockgradient.timkley.dev"
+PORT="8002"
 APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
 PHP="/usr/bin/frankenphp php-cli"
@@ -13,6 +14,8 @@ cp deployment/traefik.toml "${TRAEFIK_DYNAMIC}"
 cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
 systemctl daemon-reload
 systemctl enable "${APP_NAME}.service"
+
+ufw allow from 172.16.0.0/12 to any port "${PORT}" proto tcp comment "${APP_NAME} octane" >/dev/null
 
 runuser -u admin -- ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 runuser -u admin -- ${PHP} artisan package:discover --ansi
