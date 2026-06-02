@@ -13,6 +13,7 @@ ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 RestartSec=3
 EnvironmentFile=/var/www/blockgradient/.env
+Environment=OCTANE_SERVER=frankenphp
 
 [Install]
 WantedBy=multi-user.target

@@ -10,6 +10,7 @@ APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
 PHP_CLI=(/usr/bin/frankenphp php-cli)
 COMPOSER="$(command -v composer)"
+export OCTANE_SERVER="frankenphp"
 
 as_admin() {
     runuser -u admin -- "$@"
@@ -58,6 +59,7 @@ if [ ! -f .env ]; then
     set_env CACHE_STORE redis
     set_env SESSION_DRIVER redis
     set_env REDIS_HOST 127.0.0.1
+    set_env OCTANE_SERVER frankenphp
 
     docker exec postgres createdb -U postgres "${APP_NAME}" 2>/dev/null || true
 
