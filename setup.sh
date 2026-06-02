@@ -5,10 +5,26 @@ cd "$(dirname "$0")"
 APP_NAME="blockgradient"
 DOMAIN="blockgradient.timkley.dev"
 PORT="8002"
+PNPM_VERSION="11.5.0"
 APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
-PHP="/usr/bin/frankenphp php-cli"
+PHP_CLI=(/usr/bin/frankenphp php-cli)
 COMPOSER="$(command -v composer)"
+
+as_admin() {
+    runuser -u admin -- "$@"
+}
+
+set_env() {
+    local key="$1"
+    local value="$2"
+
+    if grep -q "^${key}=" .env; then
+        sed -i "s|^${key}=.*|${key}=${value}|" .env
+    else
+        printf '%s=%s\n' "${key}" "${value}" >> .env
+    fi
+}
 
 cp deployment/traefik.toml "${TRAEFIK_DYNAMIC}"
 cp "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
@@ -17,26 +33,18 @@ systemctl enable "${APP_NAME}.service"
 
 ufw allow from 172.16.0.0/12 to any port "${PORT}" proto tcp comment "${APP_NAME} octane" >/dev/null
 
-runuser -u admin -- ${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-runuser -u admin -- ${PHP} artisan package:discover --ansi
-runuser -u admin -- bun install
-runuser -u admin -- bun run build
+as_admin "${PHP_CLI[@]}" "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+as_admin "${PHP_CLI[@]}" artisan package:discover --ansi
+corepack enable
+corepack prepare "pnpm@${PNPM_VERSION}" --activate
+as_admin pnpm install --frozen-lockfile
+as_admin "${PHP_CLI[@]}" artisan route:clear
+as_admin pnpm run build
 
 if [ ! -f .env ]; then
     cp .env.example .env
     chown admin:admin .env
-    runuser -u admin -- ${PHP} artisan key:generate
-
-    set_env() {
-        local key="$1"
-        local value="$2"
-
-        if grep -q "^${key}=" .env; then
-            sed -i "s|^${key}=.*|${key}=${value}|" .env
-        else
-            printf '%s=%s\n' "${key}" "${value}" >> .env
-        fi
-    }
+    as_admin "${PHP_CLI[@]}" artisan key:generate
 
     set_env APP_ENV production
     set_env APP_DEBUG false
@@ -56,7 +64,7 @@ if [ ! -f .env ]; then
     echo "Initial setup complete."
     echo "Set DB_PASSWORD and any app-specific secrets in ${APP_DIR}/.env, then run migrations and start the service."
 else
-    runuser -u admin -- ${PHP} artisan migrate --force
-    runuser -u admin -- ${PHP} artisan optimize
+    as_admin "${PHP_CLI[@]}" artisan migrate --force
+    as_admin "${PHP_CLI[@]}" artisan optimize
     systemctl restart "${APP_NAME}.service"
 fi

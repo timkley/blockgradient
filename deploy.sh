@@ -2,19 +2,27 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-PHP="/usr/bin/frankenphp php-cli"
+APP_NAME="blockgradient"
+PNPM_VERSION="11.5.0"
+PHP_CLI=(/usr/bin/frankenphp php-cli)
 COMPOSER="$(command -v composer)"
 
 git pull origin main
 
-${PHP} "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-${PHP} artisan package:discover --ansi
+"${PHP_CLI[@]}" "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+"${PHP_CLI[@]}" artisan package:discover --ansi
 
-bun install
-bun run build
+corepack enable
+corepack prepare "pnpm@${PNPM_VERSION}" --activate
+pnpm install --frozen-lockfile
+"${PHP_CLI[@]}" artisan route:clear
+pnpm run build
 
-${PHP} artisan migrate --force
-${PHP} artisan optimize
-${PHP} artisan octane:reload
+"${PHP_CLI[@]}" artisan migrate --force
+"${PHP_CLI[@]}" artisan optimize
+"${PHP_CLI[@]}" artisan octane:reload
+
+sudo -n cp -f "deployment/${APP_NAME}.service" "/etc/systemd/system/${APP_NAME}.service"
+sudo -n systemctl daemon-reload
 
 echo "Deployed successfully."
