@@ -7,6 +7,7 @@ use App\Models\Block;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use RuntimeException;
 use Spatie\Color\CIELab;
 use Spatie\Color\Distance;
 
@@ -91,24 +92,38 @@ class Home extends Component
 
     private function findClosestBlock(Collection $blocksToRemove, CIELab $color): Block
     {
-        $blocks = cache()->rememberForever(ProcessBlockTextures::MINECRAFT_VERSION.':closest-blocks-for-color-'.$color->toHex(), function () use ($blocksToRemove, $color) {
+        $blockIds = cache()->rememberForever(ProcessBlockTextures::MINECRAFT_VERSION.':closest-block-ids-for-color-'.$color->toHex(), function () use ($color) {
             /** @var \Illuminate\Database\Eloquent\Collection<int, Block> $allBlocks */
             $allBlocks = app('blocks');
 
             return $allBlocks
-                ->reject(function (Block $block) use ($blocksToRemove) {
-                    return $blocksToRemove->contains('id', $block->id);
-                })
                 ->map(function (Block $block) use ($color) {
-                    $block->distance = Distance::CIE76($color, CIELab::fromString($block->lab));
-
-                    return $block;
+                    return [
+                        'id' => $block->id,
+                        'distance' => Distance::CIE76($color, CIELab::fromString($block->lab)),
+                    ];
                 })
                 ->sortBy('distance')
-                ->take(10);
+                ->pluck('id')
+                ->values()
+                ->all();
         });
 
-        /** @var Block $blocks */
-        return $blocks->first();
+        $blockedIds = $blocksToRemove->pluck('id')->all();
+        $blockId = collect($blockIds)->first(fn (int $id) => ! in_array($id, $blockedIds, true));
+
+        if ($blockId === null) {
+            throw new RuntimeException('No blocks available for gradient generation.');
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Block> $allBlocks */
+        $allBlocks = app('blocks');
+        $block = $allBlocks->firstWhere('id', $blockId);
+
+        if (! $block instanceof Block) {
+            throw new RuntimeException('Cached closest block id could not be resolved.');
+        }
+
+        return $block;
     }
 }
