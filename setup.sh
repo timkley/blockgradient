@@ -6,6 +6,7 @@ APP_NAME="blockgradient"
 DOMAIN="blockgradient.timkley.dev"
 PORT="8002"
 PNPM_VERSION="11.5.0"
+PNPM_PACKAGE="pnpm@${PNPM_VERSION}"
 APP_DIR="/var/www/${APP_NAME}"
 TRAEFIK_DYNAMIC="/home/admin/docker/traefik/dynamic/${APP_NAME}.toml"
 PHP_CLI=(/usr/bin/frankenphp php-cli)
@@ -37,10 +38,9 @@ ufw allow from 172.16.0.0/12 to any port "${PORT}" proto tcp comment "${APP_NAME
 as_admin "${PHP_CLI[@]}" "${COMPOSER}" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 as_admin "${PHP_CLI[@]}" artisan package:discover --ansi
 corepack enable
-corepack prepare "pnpm@${PNPM_VERSION}" --activate
-as_admin pnpm install --frozen-lockfile
+as_admin corepack "${PNPM_PACKAGE}" install --frozen-lockfile
 as_admin "${PHP_CLI[@]}" artisan route:clear
-as_admin pnpm run build
+as_admin corepack "${PNPM_PACKAGE}" run build
 
 if [ ! -f .env ]; then
     cp .env.example .env
